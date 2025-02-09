@@ -164,6 +164,11 @@ class BoardState(object):
                     self.players[idx]['board'][row_idx][(row_idx + color) % cfg.n_colors] += 1
                     self.players[idx]['pending'][row_idx] = (-1, 0)
 
+    def is_factory_empty(self):
+        for factory_display in self.factory_displays:
+            if sum(factory_display) > 0:
+                return False
+        return True
 
 if __name__ == "__main__":
     random.seed(42)  # You can replace 42 with any integer value
