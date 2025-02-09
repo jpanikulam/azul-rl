@@ -16,8 +16,9 @@ class GameConfig(object):
         self.players = 1
         self.round = 1
         self.n_colors = 5
-        self.n_factory_displays = 2
+        self.n_factory_displays = 1
         self.n_tiles_per_factory_display = 4
+        self.n_rows = self.n_colors
 
 def create_empty_board(cfg: GameConfig):
     """
@@ -32,7 +33,7 @@ class BoardState(object):
         for n in range(cfg.players):
             self.players.append({
                 'board': create_empty_board(cfg),
-                'pending': [(-1, 0) for _ in range(cfg.n_colors)],
+                'pending': [(-1, 0) for _ in range(cfg.n_rows)],
             })
 
         # N factory displays * M colors
