@@ -110,17 +110,14 @@ class BoardState(object):
         actions = []
         for factory_display in range(len(self.factory_displays)):
             for source_color, count in enumerate(self.factory_displays[factory_display]):
-                valid = True
                 if count != 0:
-                    valid = False
-                for destination_color in range(cfg.n_colors):
-                    (pending_color, count) = self.players[player_idx]['pending'][destination_color]
-                    nothing_pending = pending_color == -1
-                    pending_matches = pending_color == source_color
-                    board_spot_unoccupied = self.players[player_idx]['board'][pending_color][source_color] == 0
-                    if (nothing_pending or pending_matches) and board_spot_unoccupied:
-                        valid = False
-                    actions.append((factory_display, source_color, destination_color, valid))
+                    for destination_color in range(cfg.n_colors):
+                        (pending_color, count) = self.players[player_idx]['pending'][destination_color]
+                        nothing_pending = pending_color == -1
+                        pending_matches = pending_color == source_color
+                        board_spot_unoccupied = self.players[player_idx]['board'][pending_color][source_color] == 0
+                        if (nothing_pending or pending_matches) and board_spot_unoccupied:
+                            actions.append((factory_display, source_color, destination_color))
         return actions
 
 
