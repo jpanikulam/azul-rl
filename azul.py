@@ -16,7 +16,7 @@ class GameConfig(object):
         self.players = 1
         self.round = 1
         self.n_colors = 5
-        self.n_factory_displays = 1
+        self.n_factory_displays = 2
         self.n_tiles_per_factory_display = 4
 
 def create_empty_board(cfg: GameConfig):
@@ -171,17 +171,20 @@ class BoardState(object):
                     self.players[idx]['pending'][row_idx] = (-1, 0)
 
 
-game_cfg = GameConfig()
-game_state = BoardState(game_cfg)
-game_state.start_round(game_cfg)
-game_state.print()
-print(game_state.grab_and_place_tile(factory_display=0, color=0, row=1))
-game_state.print()
-print(game_state.available_actions(cfg=game_cfg))
-game_state.step(cfg=game_cfg)
-game_state.print()
-game_state.draw()
-plt.show()
+if __name__ == "__main__":
+    random.seed(42)  # You can replace 42 with any integer value
+
+    game_cfg = GameConfig()
+    game_state = BoardState(game_cfg)
+    game_state.start_round(game_cfg)
+    game_state.print()
+    print(game_state.grab_and_place_tile(factory_display=0, color=0, row=1))
+    game_state.print()
+    print(game_state.available_actions(cfg=game_cfg))
+    game_state.step(cfg=game_cfg)
+    game_state.print()
+    game_state.draw()
+    plt.show()
 
 # observations (everything is row major)
 # array: num colors * num displays
