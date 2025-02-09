@@ -15,9 +15,9 @@ class GameConfig(object):
     def __init__(self):
         self.players = 1
         self.round = 1
-        self.n_colors = 2
+        self.n_colors = 5
         self.n_factory_displays = 1
-        self.n_tiles_per_factory_display = 2
+        self.n_tiles_per_factory_display = 4
 
 def create_empty_board(cfg: GameConfig):
     """
@@ -35,6 +35,7 @@ class BoardState(object):
                 'pending': [(-1, 0) for _ in range(cfg.n_colors)],
             })
 
+        # N factory displays * M colors
         self.factory_displays = []
 
     def print(self):
@@ -48,10 +49,17 @@ class BoardState(object):
     def start_round(self, cfg: GameConfig):
         # Populate the factory displays with N
 
-        self.factory_displays = [
-            [2, 0],
-            [1, 1],
-        ]
+        self.factory_displays = []
+        for _ in range(cfg.n_factory_displays):
+
+            factory_display = [0] * cfg.n_colors
+            for _ in range(cfg.n_tiles_per_factory_display):
+                # pick a random color and append to that count
+                color = random.randint(0, cfg.n_colors - 1)
+                factory_display[color] += 1
+            
+            self.factory_displays.append(factory_display)
+
         self.curr_step = 0
 
     def draw(self):
