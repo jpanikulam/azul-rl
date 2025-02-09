@@ -20,7 +20,7 @@ class AzulEnv(gym.Env):
         self.action_space = spaces.MultiDiscrete([cfg.n_factory_displays, cfg.n_colors, cfg.n_colors])
 
         obs_space_factory = spaces.MultiDiscrete(
-            [cfg.n_tiles_per_factory_display] * cfg.n_colors * cfg.n_factory_displays
+            [cfg.n_tiles_per_factory_display + 1] * cfg.n_colors * cfg.n_factory_displays
         )
         obs_space_board = spaces.MultiBinary(cfg.n_colors * cfg.n_colors)
         # [2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
@@ -28,12 +28,13 @@ class AzulEnv(gym.Env):
         obs_space_pending = spaces.MultiDiscrete(
             list(np.array([[i + 2] * cfg.n_colors for i in range(cfg.n_rows)]).flatten())
         )
-        # print(obs_space_pending)
-        # exit(0)
 
         self.observation_space = Dict(
             {"factory": obs_space_factory, "board": obs_space_board, "pending": obs_space_pending}
         )
+
+        # print(self.observation_space)
+        # exit(0)
 
     def _game_state_to_obs(self, game_state: BoardState):
         factory = np.array(game_state.factory_displays).flatten()  # N colors x N factory displays
@@ -63,7 +64,7 @@ class AzulEnv(gym.Env):
 
         print(f"Action: {action}")
         print(f"Observation: {observation}")
-        print(f"Reward: {reward}")
+        print(f"Reward: {reward}, {reason}")
 
         terminated = self.game_state.is_factory_empty()
 
@@ -75,6 +76,8 @@ class AzulEnv(gym.Env):
     def reset(self, seed=None, options=None):
         # random.seed(seed)
 
+        print("Resetting game\n\n")
+
         game_cfg = GameConfig()
         game_state = BoardState(game_cfg)
         game_state.start_round(game_cfg)
@@ -83,6 +86,7 @@ class AzulEnv(gym.Env):
 
         info = {}
         observation = self._game_state_to_obs(self.game_state)
+        print(f"Observation: {observation}")
 
         return observation, info
 
@@ -92,11 +96,8 @@ class AzulEnv(gym.Env):
 
 
 if __name__ == "__main__":
-    random.seed(42)
 
     env = AzulEnv(GameConfig())
-    env.reset(seed=42)
-    env.step(env.action_space.sample())
 
     model = PPO(
         "MultiInputPolicy",
@@ -108,4 +109,6 @@ if __name__ == "__main__":
         tensorboard_log="ppo_logs/",
     )
 
-    model.learn(total_timesteps=10000)
+    env.reset()
+    model.learn(total_timesteps=100000)
+    model.save("Azul")
