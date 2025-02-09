@@ -58,28 +58,13 @@ class BoardState(object):
                 # pick a random color and append to that count
                 color = random.randint(0, cfg.n_colors - 1)
                 factory_display[color] += 1
-            
+
             self.factory_displays.append(factory_display)
 
         self.curr_step = 0
 
     def draw(self):
         colors = ['r', 'g', 'b', 'y', 'c', 'm']
-
-        # plt.figure("Factory Displays")
-        # ax = plt.gca()
-        # for x, factory_display in enumerate(self.factory_displays):
-        #     for y, count in enumerate(factory_display):
-        #         scale= (1.0 / len(factory_display))
-        #         rect = patches.Rectangle(
-        #             (x*scale + 0.05 * scale,
-        #             y*scale + 0.05 * scale),
-        #             0.9*scale,
-        #             0.9*scale,
-        #             linewidth=1,
-        #             edgecolor=color,
-        #             facecolor=color)
-        #         ax.add_patch(rect)
 
         for n, player in enumerate(self.players):
             plt.figure(f"Player {n}")
@@ -125,42 +110,53 @@ class BoardState(object):
         actions = []
         for factory_display in range(len(self.factory_displays)):
             for source_color, count in enumerate(self.factory_displays[factory_display]):
+                valid = True
                 if count != 0:
-                    for destination_color in range(cfg.n_colors):
-                        (pending_color, count) = self.players[player_idx]['pending'][destination_color]
-                        nothing_pending = pending_color == -1
-                        pending_matches = pending_color == source_color
-                        board_spot_unoccupied = self.players[player_idx]['board'][pending_color][source_color] == 0
-                        if (nothing_pending or pending_matches) and board_spot_unoccupied:
-                            actions.append((factory_display, source_color, destination_color))
+                    valid = False
+                for destination_color in range(cfg.n_colors):
+                    (pending_color, count) = self.players[player_idx]['pending'][destination_color]
+                    nothing_pending = pending_color == -1
+                    pending_matches = pending_color == source_color
+                    board_spot_unoccupied = self.players[player_idx]['board'][pending_color][source_color] == 0
+                    if (nothing_pending or pending_matches) and board_spot_unoccupied:
+                        valid = False
+                    actions.append((factory_display, source_color, destination_color, valid))
         return actions
 
 
-    def grab_and_place_tile(self, factory_display, color, row):
+    # If you have an action tuple, call this function, unpacking it using the splat operator
+    # > grab_and_place_tile(*action)
+    def grab_and_place_tile(self, factory_display, color, destination_row):
         player_idx = self.curr_step % len(self.players)
 
+        # number of colors is the length of the first column
+        n_colors = len(self.players[player_idx]['board'][0])
+
         if factory_display < 0 or factory_display >= len(self.factory_displays):
-            return {'error': 'Invalid factory display'}
+            return (False,  'Invalid factory display')
         chosen_display = self.factory_displays[factory_display]
 
         n_added = chosen_display[color]
 
         if n_added == 0:
-            return {'error': 'Tile not present in display'}
+            return (False,  'Tile not present in display')
 
         chosen_display[color] = 0
 
-        (current_tile_id, current_count) = self.players[player_idx]['pending'][row]
+        (current_tile_id, current_count) = self.players[player_idx]['pending'][destination_row]
 
         if current_tile_id != -1 and current_tile_id != color:
-            return {'error': 'Tile not present in location'}
+            return (False,  'Tile not present in location')
 
-        if current_count > row + 1:
-            return {'error': 'No room for tile'}
+        if current_count > destination_row + 1:
+            return (False,  'No room for in pending')
 
-        self.players[player_idx]['pending'][row] = (color, current_count + n_added)
+        if self.players[player_idx]['board'][destination_row][(color + destination_row) % n_colors] != 0:
+            return (False,  'Tile already populated')
+
+        self.players[player_idx]['pending'][destination_row] = (color, current_count + n_added)
         self.curr_step += 1
-        return {'success': True}
+        return (True, "Success")
 
     def step(self, cfg: GameConfig):
         for idx, player in enumerate(self.players):
